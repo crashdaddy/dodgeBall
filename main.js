@@ -1,13 +1,5 @@
 "use strict";
 
-const assert = require("assert");
-const readline = require("readline");
-const rl = readline.createInterface({
-	input: process.stdin,
-	output: process.stdout
-});
-
-
 // setup the starter list of players
 const arrOfPeople = [
     {
@@ -61,36 +53,67 @@ const arrOfPeople = [
     },
   ]
   
-
-  ////////////////////////////////
+  ///////////////////////////
   //
-  // establish global variables
+  // Establish our Class templates
   //
-  const listOfPlayers = []
-  const blueTeam = []
-  const redTeam = []
-
-  /////////////////////////////
-  //
-  // initialize the classes
-
   class player {
-    constructor(){}
+    constructor(person,canThrowBall, canDodgeBall, hasPaid, isHealthy, yearsExperience){
+        this.person = [person],
+        this.canThrowBall = canThrowBall,
+        this.canDodgeBall = canDodgeBall,
+        this.hasPaid = hasPaid,
+        this.isHealthy = isHealthy,
+        this.yearsExperience = yearsExperience,
+        this.players = []
+    }
+    addPlayer(player) {
+        this.players.push(player);
+    }
   }
-  class blueTeammate {
-    constructor(){}
+
+  class blueTeammate extends player {
+    constructor(color,mascot){
+        super()
+        this.color=color,
+        this.mascot = mascot,
+        this.members = []
+    }
+    joinTeam(member) {
+        this.members.push(member);
+    }
   }
-  class redTeammate {
-    constructor(){}
+
+  class redTeammate extends player {
+    constructor(color,mascot){
+        super()
+        this.color=color,
+        this.mascot = mascot,
+        this.members = []
+    }
+    joinTeam(member) {
+        this.members.push(member);
+    }
   }
   
-  // list all the available players
+  /////////////////////////
+  //
+  // global variables
+  //
+  let newBlueTeamMates = new blueTeammate("blue","aardvark");
+  let newRedTeamMates = new redTeammate("red","horse");
+  const listOfPlayers = [];
+  const blueTeam = [];
+  const redTeam = [];
+  
+  ////////////////////////////
+  //
+  //  DOM Output functions
+  //
   const listPeopleChoices = () => {
-    // get the list element
-    const listElement = document.getElementById('people');
-    // clear out the contents
-    listElement.innerHTML = "";
-    // map the array to create a new list and add to the list element
+    const listElement = document.getElementById('people')
+    listElement.innerHTML="";
+
     arrOfPeople.map(person => {
       const li = document.createElement("li")
       const button = document.createElement("button")
@@ -102,31 +125,118 @@ const arrOfPeople = [
     })
   }
   
-  // respond to "make player" button click
+  function listPlayers(){
+    const listElement = document.getElementById('players')
+    listElement.innerHTML="";
+
+    listOfPlayers.map(person => {
+      const player = person.person[0];
+      const li = document.createElement("li")
+      const bluebutton = document.createElement("button")
+      bluebutton.innerHTML = "Join Blue Team"
+      bluebutton.addEventListener('click', function() {joinBlue(player);updateDOM();} )
+      li.appendChild(bluebutton)
+      const redbutton = document.createElement("button")
+      redbutton.innerHTML = "Join Red Team"
+      redbutton.addEventListener('click', function() {joinRed(player);updateDOM()} )
+      li.appendChild(redbutton)
+      li.appendChild(document.createTextNode(player.name + " - " + player.skillSet))
+      listElement.append(li)
+    })
+  }
+
+  const listTeams = () => {
+    let listElement = document.getElementById('blue')
+    listElement.innerHTML="";
+
+    blueTeam.map(person => {
+      const li = document.createElement("li")
+      li.appendChild(document.createTextNode(person.name + " - " + person.skillSet))
+      listElement.append(li)
+    })
+    listElement = document.getElementById('red')
+    listElement.innerHTML="";
+
+    redTeam.map(person => {
+      const li = document.createElement("li")
+      li.appendChild(document.createTextNode(person.name + " - " + person.skillSet))
+      listElement.append(li)
+    })
+  }
+
+  // this function updates the DOM every time a change is made so that 
+  // the change can't be made again by accident
+  
+  const updateDOM = () => {
+      listPeopleChoices();
+      listPlayers();
+      listTeams();
+  }
+
+  //////////////////////////////////
+  //
+  // Player/Team Management
+  //
+
+  // they've already been used, so make them unavailable now
+  function removeFromPlayersList(player) {
+      let id = player.id;
+      console.log(id);
+    for (let i = 0; i<listOfPlayers.length;i++){
+        
+        if (listOfPlayers[i].person[0].id ===id) {
+            listOfPlayers.splice(i,1);
+        }
+    }
+  }
+
+  // the player has joined a team
+  function joinBlue(player) {
+      blueTeam.push(player);
+      newBlueTeamMates.joinTeam(player);
+      removeFromPlayersList(player);
+  }
+
+  function joinRed(player) {
+    redTeam.push(player);
+    newRedTeamMates.joinTeam(player);
+    removeFromPlayersList(player);
+}
+
+  // So you wanna play Dodgeball, eh?
+  const updateNewPlayer = (currentPerson) => {
+    let newPlayer = new player(currentPerson,true,true,true,true,8);
+    listOfPlayers.push(newPlayer);
+    newPlayer.addPlayer(currentPerson);
+  }
+  
   const makePlayer = (id) => {
-    console.log(`li ${id} was clicked!`)
+    let currentPerson;
+    for (let i = 0;i < arrOfPeople.length;i++){
+        if (arrOfPeople[i].id===id){
+            currentPerson = arrOfPeople[i];
+            arrOfPeople.splice(i,1);
+        }
+    }
+    updateNewPlayer(currentPerson);
+    updateDOM();
   }
 
   // Tests
 if (typeof describe === "function") {
-	describe("Game", () => {
-		it("should have a board", () => {
-			assert.equal(game.board.constructor.name, "Board");
-		});
-		it("board should have 24 checkers", () => {
-			assert.equal(game.board.checkers.length, 24);
-		});
-	});
-
-	describe("makePlayer()", () => {
+		describe("updateNewPlayer(currentPerson)", () => {
 		it("should make a character into a player", () => {
-			makePlayer(6);
-			
-        });
+			updateNewPlayer("Davey Jones");
+	});
     });
-    describe("listPeopleChoices()", () => {
-		it("should list all the available players", () => {
-            listPeopleChoices();
+    describe("joinRed(player)", () => {
+		it("should be able to join red team", () => {
+            joinRed('Rascal Fats');
+		});
+  });
+  describe("joinBlue(player)", () => {
+		it("should be able to join blue team", () => {
+            joinRed('Leeeeeeeeeeeeeeeeroy Jenkinnnnnnnnnnnns');
 		});
 	});
 }
